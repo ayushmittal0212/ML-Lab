@@ -1,0 +1,89 @@
+import pandas as pd
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+import matplotlib.pyplot as plt
+
+# Load the dataset
+data_url = "https://query.data.world/sdhilip/pizza-datasets"
+pizza_data = pd.read_csv(data_url)
+
+# Drop non-numeric columns if any
+numeric_data = pizza_data.select_dtypes(include=['number'])
+
+# Standardize the data
+scaler = StandardScaler()
+scaled_data = scaler.fit_transform(numeric_data)
+
+# Fit PCA
+pca = PCA()
+pca.fit(scaled_data)
+
+# Plot explained variance ratio
+plt.plot(range(1, len(pca.explained_variance_ratio_) + 1), 
+         pca.explained_variance_ratio_.cumsum(), marker='o', linestyle='--')
+plt.xlabel('Number of Principal Components')
+plt.ylabel('Cumulative Explained Variance')
+plt.title('Explained Variance vs. Number of Principal Components')
+plt.show()
+
+# Determine the number of components to retain (e.g., based on 95% explained variance)
+cumulative_var = pca.explained_variance_ratio_.cumsum()
+num_components = len(cumulative_var[cumulative_var <= 0.95]) + 1
+print(f"Number of principal components to retain: {num_components}")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Display the explained variance ratio for each component
+explained_var_ratio = pca.explained_variance_ratio_
+for i, ratio in enumerate(explained_var_ratio, 1):
+    print(f"Principal Component {i}: {ratio:.4f} explained variance")
+
+# Interpretation of each principal component (coefficients)
+components_df = pd.DataFrame(pca.components_, columns=numeric_data.columns)
+print("\nPrincipal Components:")
+print(components_df)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Create a biplot for the first two principal components
+pca_data = pca.transform(scaled_data)
+plt.figure(figsize=(10, 8))
+for i, col in enumerate(numeric_data.columns):
+    plt.arrow(0, 0, pca.components_[0, i], pca.components_[1, i], color='r', alpha=0.5)
+    plt.text(pca.components_[0, i]*1.5, pca.components_[1, i]*1.5, col, color='g', ha='center', va='center')
+
+plt.scatter(pca_data[:, 0], pca_data[:, 1], alpha=0.8)
+plt.xlabel('Principal Component 1')
+plt.ylabel('Principal Component 2')
+plt.title('Biplot of the first two principal components')
+plt.grid()
+plt.show()
